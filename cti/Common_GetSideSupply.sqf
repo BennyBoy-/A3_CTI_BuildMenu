@@ -21,4 +21,4 @@
 	  -> Return the current west supply
 */
 
-random 2000
+DEBUG_SUPPLY

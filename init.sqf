@@ -39,3 +39,8 @@ _index = 0;
 
 missionNamespace setVariable ["CTI_COIN_DEFENSE_CATEGORIES", _sub_categories];
 missionNamespace setVariable ["CTI_COIN_DEFENSE_CATEGORIES_INDEX", _sub_categories_index];
+
+DEBUG_FUNDS = 1500;
+DEBUG_SUPPLY = 1000;
+
+0 spawn { sleep 5; DEBUG_SUPPLY = DEBUG_SUPPLY + 1500};

@@ -24,4 +24,4 @@
 	  -> Will return the current player funds
 */
 
-random 2000;
+DEBUG_FUNDS
