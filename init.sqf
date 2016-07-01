@@ -12,6 +12,8 @@
 // };
 CTI_P_SideJoined = side player;
 call compile preprocessFileLineNumbers "cti\Init_CommonConstants.sqf";
+CTI_CL_FNC_GetPlayerFunds = compile preprocessFileLineNumbers "cti\Client_GetPlayerFunds.sqf";
+CTI_CO_FNC_GetSideSupply = compile preprocessFileLineNumbers "cti\Common_GetSideSupply.sqf";
 call compile preprocessFileLineNumbers "coin_func.sqf";
 (west) call compile preprocessFileLineNumbers "cti\base_west.sqf";
 

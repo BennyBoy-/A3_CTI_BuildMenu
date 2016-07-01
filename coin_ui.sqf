@@ -55,30 +55,36 @@ showCinemaBorder false;
 showCommandingMenu "#USER:CTI_COIN_Categories_0";
 _last_collision_update = -100;
 
-while {!isNil {missionNamespace getVariable 'CTI_COIN_CAMCONSTRUCT'} && !(missionNamespace getVariable "CTI_COIN_EXIT")} do {
-	if !(isNil {missionNamespace getVariable "CTI_COIN_PARAM"}) then {
-		if (isNil {missionNamespace getVariable "CTI_COIN_PREVIEW"}) then {
-			_preview = objNull;
-			switch (missionNamespace getVariable "CTI_COIN_PARAM_KIND") do {
-				case 'STRUCTURES': {
-					_preview = ((missionNamespace getVariable "CTI_COIN_PARAM") select 1) select 0;
+with missionNamespace do {
+	while {!isNil 'CTI_COIN_CAMCONSTRUCT' && !CTI_COIN_EXIT} do {
+		if !(isNil 'CTI_COIN_PARAM') then {
+			if (isNil 'CTI_COIN_PREVIEW') then {
+				_preview = objNull;
+				switch (CTI_COIN_PARAM_KIND) do {
+					case 'STRUCTURES': {
+						_preview = ((missionNamespace getVariable "CTI_COIN_PARAM") select 1) select 0;
+					};
+					case 'DEFENSES': {
+						_preview = (missionNamespace getVariable "CTI_COIN_PARAM") select 1;
+					};
 				};
-				case 'DEFENSES': {
-					_preview = (missionNamespace getVariable "CTI_COIN_PARAM") select 1;
-				};
+				_preview_item = _preview createVehicleLocal (screenToWorld [0.5,0.5]);
+				_preview_item allowDamage false;
+				if !(isNil 'CTI_COIN_LASTDIR') then {_preview_item setDir CTI_COIN_LASTDIR};
+				CTI_COIN_DIR = getDir _preview_item;
+				
+				CTI_COIN_CAMCONSTRUCT camSetTarget _preview_item;
+				CTI_COIN_CAMCONSTRUCT camCommit 0;
+				CTI_COIN_PREVIEW = _preview_item;
+			} else {
+				CTI_COIN_PREVIEW setDir CTI_COIN_DIR;
+				CTI_COIN_PREVIEW setVectorUp [0,0,0];
+				if (time - _last_collision_update > 2) then {_last_collision_update = time;{CTI_COIN_PREVIEW disableCollisionWith _x} forEach (CTI_COIN_PREVIEW nearEntities 150)};
 			};
-			_preview_item = _preview createVehicleLocal (screenToWorld [0.5,0.5]);
-			_preview_item allowDamage false;
-			
-			(missionNamespace getVariable 'CTI_COIN_CAMCONSTRUCT') camSetTarget _preview_item;
-			(missionNamespace getVariable 'CTI_COIN_CAMCONSTRUCT') camCommit 0;
-			missionNamespace setVariable ["CTI_COIN_PREVIEW", _preview_item];
-		} else {
-			if (time - _last_collision_update > 2) then {_last_collision_update = time;{(missionNamespace getVariable "CTI_COIN_PREVIEW") disableCollisionWith _x} forEach ((missionNamespace getVariable "CTI_COIN_PREVIEW") nearEntities 150)};
 		};
+		
+		sleep .01;
 	};
-	
-	sleep .01;
 };
 
 //--- Cleanup
