@@ -11,6 +11,7 @@
 	// [Format["WFBE_EAST%1TYPE",_v select _count],_count,true] Call SetNamespace;
 // };
 CTI_P_SideJoined = side player;
+CTI_BASE_DEFENSES_AUTO_LIMIT = 5;
 call compile preprocessFileLineNumbers "cti\Init_CommonConstants.sqf";
 CTI_CL_FNC_GetPlayerFunds = compile preprocessFileLineNumbers "cti\Client_GetPlayerFunds.sqf";
 CTI_CO_FNC_GetSideSupply = compile preprocessFileLineNumbers "cti\Common_GetSideSupply.sqf";
@@ -41,6 +42,8 @@ missionNamespace setVariable ["CTI_COIN_DEFENSE_CATEGORIES", _sub_categories];
 missionNamespace setVariable ["CTI_COIN_DEFENSE_CATEGORIES_INDEX", _sub_categories_index];
 
 DEBUG_FUNDS = 1500;
-DEBUG_SUPPLY = 1000;
+DEBUG_SUPPLY = 6000;
 
 0 spawn { sleep 5; DEBUG_SUPPLY = DEBUG_SUPPLY + 1500};
+
+onMapSingleClick "vehicle player setPos _pos"; //--- benny debug: teleport

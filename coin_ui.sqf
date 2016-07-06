@@ -30,6 +30,18 @@ with missionNamespace do {
 	CTI_COIN_PARAM_KIND = nil;
 	CTI_COIN_PREVIEW = nil;
 	CTI_COIN_LASTFUNDS = [0,0];
+	
+	//--- Define the source parameters
+	CTI_COIN_SOURCE = _startPos;
+	CTI_COIN_RANGE = CTI_COIN_AREA_SIZE select 0;
+	
+	//--- Define the colors
+	CTI_COIN_COLOR_INVALID = "#ff3333";
+	CTI_COIN_COLOR_INVALID_UI = [1,0.2,0.2,0.4];
+	CTI_COIN_COLOR_VALID = "#42b6ff";
+	CTI_COIN_COLOR_VALID_UI = [0.259,0.713,1,0.3];
+	CTI_COIN_COLOR_OUTOFRANGE = "#bababa";
+	CTI_COIN_COLOR_OUTOFRANGE_UI = [1,1,1,0.1];
 
 	//--- Create the construction camera
 	CTI_COIN_CAMCONSTRUCT = "camconstruct" camCreate [position player select 0,position player select 1,15];
@@ -56,21 +68,21 @@ _categories = _source call CTI_Coin_CreateRootMenu;
 
 showCommandingMenu "#USER:CTI_COIN_Categories_0";
 _last_collision_update = -100;
+_last_menu = "";
+_last_wallalign = false;
+_last_autodefense = false;
 
 with missionNamespace do {
 	while {!isNil 'CTI_COIN_CAMCONSTRUCT' && !CTI_COIN_EXIT} do {
 		//--- Parameters are set, a preview is being created or is being moved
 		if !(isNil 'CTI_COIN_PARAM') then {
 			if (isNil 'CTI_COIN_PREVIEW') then {
-				_label = "";
 				_preview = objNull;
 				switch (CTI_COIN_PARAM_KIND) do {
 					case 'STRUCTURES': {
-						_label = (CTI_COIN_PARAM select 0) select 1;
 						_preview = (CTI_COIN_PARAM select 1) select 0;
 					};
 					case 'DEFENSES': {
-						_label = CTI_COIN_PARAM select 0;
 						_preview = CTI_COIN_PARAM select 1;
 					};
 				};
@@ -82,18 +94,20 @@ with missionNamespace do {
 				CTI_COIN_DIR = getDir _preview_item;
 				
 				//--- Update the overlay description
-				_textHint =  format ["<t align='center'><t size='1.4'>%1</t><br /><t size='1'></t></t>", _label];
-				((uiNamespace getVariable "cti_title_coin") displayCtrl 112214) ctrlSetStructuredText (parseText _textHint);
-				((uiNamespace getVariable "cti_title_coin") displayCtrl 112214) ctrlCommit 0;
+				(_preview_item) call CTI_Coin_UpdatePreview;
 				
 				//--- Attach the preview item to the camera
 				CTI_COIN_CAMCONSTRUCT camSetTarget _preview_item;
 				CTI_COIN_CAMCONSTRUCT camCommit 0;
 				CTI_COIN_PREVIEW = _preview_item;
 			} else {
+				//--- Update the direction to prevent it from moving by itself on sloppy hills
 				CTI_COIN_PREVIEW setDir CTI_COIN_DIR;
 				CTI_COIN_PREVIEW setVectorUp [0,0,0];
 				if (time - _last_collision_update > 2) then {_last_collision_update = time;{CTI_COIN_PREVIEW disableCollisionWith _x} forEach (CTI_COIN_PREVIEW nearEntities 150)};
+				
+				//--- Update the coloration if needed
+				(CTI_COIN_PREVIEW) call CTI_Coin_UpdatePreview;
 			};
 		} else { //--- The player's commanding menu is gone (parent hierarchy is lost on menu refresh)
 			if (commandingMenu == '') then {
@@ -135,9 +149,62 @@ with missionNamespace do {
 			((uiNamespace getVariable "cti_title_coin") displayCtrl 112224) ctrlCommit 0;
 		};
 		
-		//--- Check if the controls overlay need an update
-		// CloseContext -> rmb
-		// NavigateMenu -> backspace
+		//--- Update the controls if the menu differs from the last
+		if (commandingMenu != _last_menu) then {
+			_textControls = "";
+			
+			if (isNil 'CTI_COIN_PREVIEW') then { //--- Menu browsing
+				_textAlign = format["<t color='#42b6ff' shadow='2' size='1'>Auto Align:<t align='right'>%1</t></t><br />", actionKeysNames ["Diary", 1]];
+				_textAutoDefense = format["<t color='#42b6ff' shadow='2' size='1'>Auto Defense:<t align='right'>%1</t></t><br />", actionKeysNames ["Gear", 1]];
+				_textControls = format ["%1%2", _textAutoDefense, _textAlign];
+				if (commandingMenu == "#USER:CTI_COIN_Categories_0") then {
+					_textControls = _textControls + format ["<t color='%2' shadow='2' size='1'>Exit:<t align='right'>%1</t></t>", actionKeysNames ["NavigateMenu", 1], CTI_COIN_COLOR_INVALID];
+				} else {
+					_textControls = _textControls + format ["<t color='#42b6ff' shadow='2' size='1'>Back:<t align='right'>%1</t></t>", actionKeysNames ["NavigateMenu", 1]];
+				};
+			} else { //--- Preview mode
+				_textBuild = format["<t color='#42b6ff' shadow='2' size='1'>Build:<t align='right'>%1</t></t><br />", actionKeysNames ["DefaultAction", 1]];
+				_textRotate = format["<t color='#42b6ff' shadow='2' size='1'>Rotate:<t align='right'>%1</t></t><br />", actionKeysNames ["PrevAction", 1]];
+				_textQuit = format["<t color='#42b6ff' shadow='2' size='1'>Back:<t align='right'>%1</t></t>", actionKeysNames ["NavigateMenu", 1]];
+				
+				_textControls = format["%1%2%3", _textBuild, _textRotate, _textQuit];
+			};
+			
+			((uiNamespace getVariable "cti_title_coin") displayCtrl 112215) ctrlSetStructuredText (parseText _textControls);
+			((uiNamespace getVariable "cti_title_coin") displayCtrl 112215) ctrlCommit 0;
+			
+			_last_menu = commandingMenu;
+		};
+		
+		//--- Update Wall Alignment icon if needed (and if enabled)
+		if !(_last_wallalign isEqualTo (profileNamespace getVariable ["CTI_COIN_WALLALIGN", true])) then {
+			_last_wallalign = profileNamespace getVariable ["CTI_COIN_WALLALIGN", true];
+			
+			_color = CTI_COIN_COLOR_OUTOFRANGE_UI;
+			if (profileNamespace getVariable ["CTI_COIN_WALLALIGN", true]) then {
+				_color_valid_lum = +CTI_COIN_COLOR_VALID_UI;
+				_color_valid_lum set [3, 0.6];
+				_color = _color_valid_lum;
+			};
+			
+			((uiNamespace getVariable "cti_title_coin") displayCtrl 112216) ctrlSetTextColor _color;
+			((uiNamespace getVariable "cti_title_coin") displayCtrl 112216) ctrlCommit 0;
+		};
+		
+		//--- Update Auto defense icon if needed (and if enabled)
+		if (!(_last_autodefense isEqualTo (profileNamespace getVariable ["CTI_COIN_AUTODEFENSE", true])) && CTI_BASE_DEFENSES_AUTO_LIMIT > 0) then {
+			_last_autodefense = profileNamespace getVariable ["CTI_COIN_AUTODEFENSE", true];
+			
+			_color = CTI_COIN_COLOR_OUTOFRANGE_UI;
+			if (profileNamespace getVariable ["CTI_COIN_AUTODEFENSE", true]) then {
+				_color_valid_lum = +CTI_COIN_COLOR_VALID_UI;
+				_color_valid_lum set [3, 0.6];
+				_color = _color_valid_lum;
+			};
+			
+			((uiNamespace getVariable "cti_title_coin") displayCtrl 112217) ctrlSetTextColor _color;
+			((uiNamespace getVariable "cti_title_coin") displayCtrl 112217) ctrlCommit 0;
+		};
 		
 		sleep .01;
 	};

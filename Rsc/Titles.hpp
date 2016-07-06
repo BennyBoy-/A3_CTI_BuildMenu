@@ -30,12 +30,31 @@ class RscTitles {
 				text = "Rsc\cursor_w_laserlock_gs.paa";
 			};
 			
+			class IconWall: RscPictureKeepAspect {
+				idc = 112216;
+				x = "SafeZoneX + (SafeZoneW * 0.75)";
+				y = "SafeZoneY + (SafezoneH * 0.953)";
+				w = "SafeZoneW * 0.04";
+				h = "SafeZoneH * 0.04";
+				
+				colorText[] = {1, 1, 1, 0.3};
+				colorBackground[] = {0, 0, 0, 0};
+				text = "Rsc\icon_walls.paa";
+			};
+			
+			class IconStaticMan: IconWall {
+				idc = 112217;
+				x = "SafeZoneX + (SafeZoneW * 0.72)";
+				
+				text = "Rsc\icon_staticman.paa";
+			};
+			
 			class DescriptionText : RscStructuredText {
 				idc = 112214;
 				x = "SafeZoneX + (SafeZoneW * 0.21)";
-				y = "SafeZoneY + (SafezoneH * 0.915)";
+				y = "SafeZoneY + (SafezoneH * 0.913)";
 				w = "SafeZoneW * 0.58";
-				h = "SafeZoneH * 0.11";
+				h = "SafeZoneH * 0.1";
 				sizeEx = "(			(			(			((safezoneW / safezoneH) min 1.2) / 1.2) / 25) * 1)";
 				
 				// colorBackground[] = {0, 0, 0, 0.6}; //debug
@@ -53,7 +72,6 @@ class RscTitles {
 				
 				x = "SafeZoneX + (SafeZoneW * 0.8)";
 				w = "SafeZoneW * 0.2";
-				h = "SafeZoneH * 0.11";
 			};
 			
 			class CashText : DescriptionText {
@@ -61,7 +79,6 @@ class RscTitles {
 				
 				x = "SafeZoneX";
 				w = "SafeZoneW * 0.15";
-				h = "SafeZoneH * 0.1";
 			};
 		};
 	};
